@@ -3,12 +3,14 @@
     "MyCronJob1": {
       "CronExpression": "*/10 * * * * *",
       "TimeZoneInfo": "UTC",
-      "CronFormat": "IncludeSeconds"
+      "CronFormat": "IncludeSeconds",
+      "JobDesc": "Job 1"
     },
     "MyCronJob2": {
       "CronExpression": "* * * * *",
       "TimeZoneInfo": "Local",
-      "CronFormat": "Standard"
+      "CronFormat": "Standard",
+      "JobDesc": "Job 2"
     }
   }
 }

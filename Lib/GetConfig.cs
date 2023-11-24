@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 public class AppConfig
 {
     public dynamic JsonObj;
-    public string? ConfigPath;
+    public string ConfigPath;
     public AppConfig(string appsetting)
     {
         JsonObj = GetAppSetting(appsetting);
@@ -29,7 +29,7 @@ public class AppConfig
         {
             string output = Newtonsoft.Json.JsonConvert.SerializeObject(JsonObj, Newtonsoft.Json.Formatting.Indented);
             Console.WriteLine(output);
-            File.WriteAllText(this.ConfigPath, output);
+            File.WriteAllText(ConfigPath, output);
         }
     }
 

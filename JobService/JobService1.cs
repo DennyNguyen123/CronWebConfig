@@ -6,7 +6,7 @@ public class MyCronJob1 : CronJobService
     private readonly ILogger<MyCronJob1> _logger;
 
     public MyCronJob1(ICronConfiguration<MyCronJob1> config, ILogger<MyCronJob1> logger)
-        : base(config.CronExpression, config.TimeZoneInfo, config.CronFormat)
+        : base(config.CronExpression, config.TimeZoneInfo, config.CronFormat, config.JobDesc, config.IsFromConfig, config.ConfigPath)
     {
         _logger = logger;
 
@@ -25,10 +25,10 @@ public class MyCronJob1 : CronJobService
     }
 
 
-    public override async Task Reconfig(string cronExpression, CronFormat cronFormat, TimeZoneInfo timeZoneInfo)
+    public override Task Reconfig(string cronExpression, string cronFormat, string timeZoneInfo, string? jobDescription)
     {
         _logger.LogInformation("Reconfig job 1");
-        await base.Reconfig(cronExpression, cronFormat, timeZoneInfo);
+        return base.Reconfig(cronExpression, cronFormat, timeZoneInfo, jobDescription);
     }
 
     public override async Task RunManual()

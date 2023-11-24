@@ -3,34 +3,80 @@ public abstract class CronJobService : IHostedService, IDisposable
 {
     private System.Timers.Timer? timer;
 
-    private TimeZoneInfo timeZoneInfo;
+    public TimeZoneInfo timeZoneInfo;
 
-    private CronFormat cronFormat;
+    public CronFormat cronFormat;
 
-    private CronExpression cronExpression;
+    public CronExpression cronExpression;
 
-    public CancellationTokenSource? _cancellationTokenSource;
+    public string cronExpressionstring { get; set; }
+
+    private CancellationTokenSource? _cancellationTokenSource;
+
+    public string JobName { get => this.GetType().Name; }
+    public string? JobDescription { get; set; }
+
+    public bool IsFromConfig { get; set; }
+
+    public string? ConfigPath { get; set; }
 
     public bool State { get; set; }
     public string StateString { get => State ? "Running" : "Stopped"; }
 
-    protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat = CronFormat.Standard)
+    protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat, string? jobDescription, bool isFromConfig, string? configpath)
     {
+        this.ConfigPath = configpath;
+        this.IsFromConfig = isFromConfig;
+        this.JobDescription = jobDescription;
         this.timeZoneInfo = timeZoneInfo;
         this.cronFormat = cronFormat;
+        this.cronExpressionstring = cronExpression;
         this.cronExpression = CronExpression.Parse(cronExpression, this.cronFormat);
     }
 
-    public virtual async Task Reconfig(string cronExpression, CronFormat cronFormat, TimeZoneInfo timeZoneInfo)
-    {
-        this.timeZoneInfo = timeZoneInfo;
-        this.cronFormat = cronFormat;
-        this.cronExpression = CronExpression.Parse(cronExpression, this.cronFormat);
-        timer?.Stop();
-        timer?.Dispose();
-        _cancellationTokenSource = new CancellationTokenSource();
-        await ScheduleJob(_cancellationTokenSource.Token);
 
+    private void WriteConfig(string expression, string timeZone, string cronformat, string? jobdesc)
+    {
+        var config = new AppConfig(this.ConfigPath ?? "");
+        config.JsonObj["CronJobs"][JobName]["CronExpression"] = expression;
+        config.JsonObj["CronJobs"][JobName]["TimeZoneInfo"] = timeZone;
+        config.JsonObj["CronJobs"][JobName]["CronFormat"] = cronformat;
+        config.JsonObj["CronJobs"][JobName]["CronFormat"] = jobdesc;
+        config.SaveToFile();
+    }
+    public virtual async Task Reconfig(string cronExpression, string cronformatstr, string timeZoneInfo, string? jobDescription)
+    {
+        if (this.IsFromConfig)
+        {
+            timer?.Stop();
+            timer?.Dispose();
+
+            var tz = timeZoneInfo == "UTC" ? TimeZoneInfo.Utc : TimeZoneInfo.Local;
+            this.timeZoneInfo = tz;
+
+            Enum.TryParse(cronformatstr, true, out CronFormat cronFormat);
+            this.cronFormat = cronFormat;
+            this.cronExpression = CronExpression.Parse(cronExpression, this.cronFormat);
+            this.cronExpressionstring = cronExpression;
+            if (State)
+            {
+                await StopAsync();
+            }
+
+            this.WriteConfig(cronExpression, timeZoneInfo, cronformatstr, jobDescription);
+
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            if (!State)
+            {
+                await StartAsync(_cancellationTokenSource.Token);
+            }
+        }
+        else
+        {
+            throw new Exception("Only support for config type");
+        }
+        await Task.CompletedTask.ConfigureAwait(continueOnCapturedContext: true);
     }
 
     public virtual async Task ScheduleJob(CancellationToken cancellationToken)
@@ -61,7 +107,6 @@ public abstract class CronJobService : IHostedService, IDisposable
             timer.Start();
         }
 
-        await Task.CompletedTask.ConfigureAwait(continueOnCapturedContext: true);
     }
 
     public virtual async Task RunManual()
@@ -89,8 +134,8 @@ public abstract class CronJobService : IHostedService, IDisposable
 
         if (!this.State)
         {
-            // await StartAsync(_cancellationTokenSource.Token);
-            await ScheduleJob(cancellationToken).ConfigureAwait(continueOnCapturedContext: true);
+
+            await ScheduleJob(_cancellationTokenSource.Token).ConfigureAwait(continueOnCapturedContext: true);
             State = true;
         }
     }
@@ -121,6 +166,11 @@ public interface ICronConfiguration<T>
     TimeZoneInfo TimeZoneInfo { get; set; }
 
     CronFormat CronFormat { get; set; }
+    public string? JobDesc { get; set; }
+
+    public bool IsFromConfig { get; set; }
+
+    public string? ConfigPath { get; set; }
 }
 
 public class CronConfiguration<T> : ICronConfiguration<T>
@@ -133,6 +183,11 @@ public class CronConfiguration<T> : ICronConfiguration<T>
 
     public static string ServiceName { get => typeof(T).Name; }
 
+    public string? JobDesc { get; set; }
+
+    public bool IsFromConfig { get; set; }
+    public string? ConfigPath { get; set; }
+
     public static CronConfiguration<T> Get(string configpath = "")
     {
         // var config = Utils.GetAppSetting(configpath);
@@ -140,9 +195,8 @@ public class CronConfiguration<T> : ICronConfiguration<T>
 
         var expression = config.JsonObj["CronJobs"][ServiceName]["CronExpression"].ToString();
         var tz = config.JsonObj["CronJobs"][ServiceName]["TimeZoneInfo"].ToString();
-
-
         var cf = config.JsonObj["CronJobs"][ServiceName]["CronFormat"].ToString();
+        var jobdesc = config.JsonObj["CronJobs"][ServiceName]["JobDesc"].ToString();
         TimeZoneInfo timeZone;
         CronFormat cronFormat;
 
@@ -178,17 +232,11 @@ public class CronConfiguration<T> : ICronConfiguration<T>
         cronConfiguration.CronExpression = expression;
         cronConfiguration.TimeZoneInfo = timeZone;
         cronConfiguration.CronFormat = cronFormat;
+        cronConfiguration.JobDesc = jobdesc;
         return cronConfiguration;
     }
 
-    public static void Set(string expression, string timeZone, string cronformat, string configpath = "")
-    {
-        var config = new AppConfig(configpath);
-        config.JsonObj["CronJobs"][ServiceName]["CronExpression"] = expression;
-        config.JsonObj["CronJobs"][ServiceName]["TimeZoneInfo"] = timeZone;
-        config.JsonObj["CronJobs"][ServiceName]["CronFormat"] = cronformat;
-        config.SaveToFile();
-    }
+
 }
 
 public static class Startup
@@ -197,6 +245,7 @@ public static class Startup
     {
         CronConfiguration<T> cronConfiguration = new CronConfiguration<T>();
         action(cronConfiguration);
+        cronConfiguration.IsFromConfig = false;
         services.AddSingleton((ICronConfiguration<T>)cronConfiguration);
         services.AddHostedService<T>();
         return services;
@@ -207,6 +256,8 @@ public static class Startup
 
         var cronConfiguration = CronConfiguration<T>.Get(configpath);
         // action(cronConfiguration);
+        cronConfiguration.IsFromConfig = true;
+        cronConfiguration.ConfigPath = configpath;
         services.AddSingleton((ICronConfiguration<T>)cronConfiguration);
         services.AddHostedService<T>();
 
