@@ -13,7 +13,9 @@ builder.Services.AddControllersWithViews();
 //     options.CronFormat = Cronos.CronFormat.IncludeSeconds;
 // });
 
-builder.Services.ApplyResulationByConfig<MyCronJob1>("cron.config.json", "MyCronJob");
+CronConfiguration<MyCronJob1>.Set("*/20 * * * * *", "UTC", "IncludeSeconds", "cron.config.json");
+
+// builder.Services.ApplyResulationByConfig<MyCronJob1>("cron.config.json");
 
 // builder.Logging.ClearProviders();
 // builder.Logging.AddEventLog();

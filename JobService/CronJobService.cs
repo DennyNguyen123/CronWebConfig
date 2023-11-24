@@ -131,14 +131,17 @@ public class CronConfiguration<T> : ICronConfiguration<T>
 
     public CronFormat CronFormat { get; set; } = CronFormat.Standard;
 
-    public static CronConfiguration<T> Get(string configpath = "", string configname = "")
+    public static string ServiceName { get => typeof(T).Name; }
+
+    public static CronConfiguration<T> Get(string configpath = "")
     {
-        var name = string.IsNullOrEmpty(configname) ? typeof(T).Name : configname;
-        var _configpath = string.IsNullOrEmpty(configname) ? "appsettings.json" : configpath;
-        var MyConfig = new ConfigurationBuilder().AddJsonFile(_configpath).Build();
-        var expression = MyConfig.GetValue<string>($"CronJobs:{name}:CronExpression");
-        var tz = MyConfig.GetValue<string>($"CronJobs:{name}:TimeZoneInfo");
-        var cf = MyConfig.GetValue<string>($"CronJobs:{name}:CronFormat");
+        // var config = Utils.GetAppSetting(configpath);
+        var config = new AppConfig(configpath);
+
+        var expression = config.JsonObj["CronJobs"][ServiceName]["CronExpression"];
+        var tz = config.JsonObj["CronJobs"][ServiceName]["TimeZoneInfo"];
+        var cf = config.JsonObj["CronJobs"][ServiceName]["CronFormat"];
+
 
         TimeZoneInfo timeZone;
         CronFormat cronFormat;
@@ -148,7 +151,7 @@ public class CronConfiguration<T> : ICronConfiguration<T>
         || string.IsNullOrEmpty(cf)
         )
         {
-            throw new Exception($"Missing config for {name}");
+            throw new Exception($"Missing config for {ServiceName}");
         }
 
         if (tz == "Local")
@@ -178,9 +181,13 @@ public class CronConfiguration<T> : ICronConfiguration<T>
         return cronConfiguration;
     }
 
-    public static void Set(string expression, string timeZone, string cronformat, string configpath = "", string configname = "")
+    public static void Set(string expression, string timeZone, string cronformat, string configpath = "")
     {
-
+        var config = new AppConfig(configpath);
+        config.JsonObj["CronJobs"][ServiceName]["CronExpression"] = expression;
+        config.JsonObj["CronJobs"][ServiceName]["TimeZoneInfo"] = timeZone;
+        config.JsonObj["CronJobs"][ServiceName]["CronFormat"] = cronformat;
+        config.SaveToFile();
     }
 }
 
@@ -195,10 +202,10 @@ public static class Startup
         return services;
     }
 
-    public static IServiceCollection ApplyResulationByConfig<T>(this IServiceCollection services, string configpath = "", string configname = "") where T : CronJobService
+    public static IServiceCollection ApplyResulationByConfig<T>(this IServiceCollection services, string configpath = "") where T : CronJobService
     {
 
-        var cronConfiguration = CronConfiguration<T>.Get(configpath, configname);
+        var cronConfiguration = CronConfiguration<T>.Get(configpath);
         // action(cronConfiguration);
         services.AddSingleton((ICronConfiguration<T>)cronConfiguration);
         services.AddHostedService<T>();
