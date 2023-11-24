@@ -1,14 +1,32 @@
+@model List<CronJobService>
+
 @{
-    var state = ViewBag.CronState == false ? "Running" : "Stopped";
+
 }
 
-<h1>Test</h1>
+<h1>Job Services</h1>
 
 
-<h2>State : @state </h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Name</th>
+      <th scope="col">State</th>
+      <th scope="col">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in Model)
+    {
+      <tr>
+        <th scope="row">@Model.IndexOf(item)</th>
+        <td>@item.GetType().Name</td>
+        <td>@item.StateString</td>
+        <td></td>
+      </tr>
+    }
 
-<button onclick="location.href='@Url.Action("Start","Test")'">Start</button>
-<button onclick="location.href='@Url.Action("Stop", "Test")'">Stop</button>
-<button onclick="location.href='@Url.Action("StopAll", "Test")'">Stop All</button>
-<button onclick="location.href='@Url.Action("Run", "Test")'">Run</button>
-<input type="submit" id="Test" value="Submit" />
+
+  </tbody>
+</table>

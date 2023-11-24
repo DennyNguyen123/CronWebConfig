@@ -1,5 +1,4 @@
 using Cronos;
-
 public abstract class CronJobService : IHostedService, IDisposable
 {
     private System.Timers.Timer? timer;
@@ -13,6 +12,7 @@ public abstract class CronJobService : IHostedService, IDisposable
     public CancellationTokenSource? _cancellationTokenSource;
 
     public bool State { get; set; }
+    public string StateString { get => State ? "Running" : "Stopped"; }
 
     protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat = CronFormat.Standard)
     {
@@ -138,11 +138,11 @@ public class CronConfiguration<T> : ICronConfiguration<T>
         // var config = Utils.GetAppSetting(configpath);
         var config = new AppConfig(configpath);
 
-        var expression = config.JsonObj["CronJobs"][ServiceName]["CronExpression"];
-        var tz = config.JsonObj["CronJobs"][ServiceName]["TimeZoneInfo"];
-        var cf = config.JsonObj["CronJobs"][ServiceName]["CronFormat"];
+        var expression = config.JsonObj["CronJobs"][ServiceName]["CronExpression"].ToString();
+        var tz = config.JsonObj["CronJobs"][ServiceName]["TimeZoneInfo"].ToString();
 
 
+        var cf = config.JsonObj["CronJobs"][ServiceName]["CronFormat"].ToString();
         TimeZoneInfo timeZone;
         CronFormat cronFormat;
 

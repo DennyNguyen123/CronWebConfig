@@ -4,6 +4,11 @@
       "CronExpression": "*/10 * * * * *",
       "TimeZoneInfo": "UTC",
       "CronFormat": "IncludeSeconds"
+    },
+    "MyCronJob2": {
+      "CronExpression": "* * * * *",
+      "TimeZoneInfo": "Local",
+      "CronFormat": "Standard"
     }
   }
 }
