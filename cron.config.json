@@ -1,0 +1,9 @@
+{
+  "CronJobs": {
+    "MyCronJob": {
+      "CronExpression": "*/10 * * * * *",
+      "TimeZoneInfo": "UTC",
+      "CronFormat": "IncludeSeconds"
+    }
+  }
+}

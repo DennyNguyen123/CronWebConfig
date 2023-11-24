@@ -131,6 +131,57 @@ public class CronConfiguration<T> : ICronConfiguration<T>
 
     public CronFormat CronFormat { get; set; } = CronFormat.Standard;
 
+    public static CronConfiguration<T> Get(string configpath = "", string configname = "")
+    {
+        var name = string.IsNullOrEmpty(configname) ? typeof(T).Name : configname;
+        var _configpath = string.IsNullOrEmpty(configname) ? "appsettings.json" : configpath;
+        var MyConfig = new ConfigurationBuilder().AddJsonFile(_configpath).Build();
+        var expression = MyConfig.GetValue<string>($"CronJobs:{name}:CronExpression");
+        var tz = MyConfig.GetValue<string>($"CronJobs:{name}:TimeZoneInfo");
+        var cf = MyConfig.GetValue<string>($"CronJobs:{name}:CronFormat");
+
+        TimeZoneInfo timeZone;
+        CronFormat cronFormat;
+
+        if (string.IsNullOrEmpty(expression)
+        || string.IsNullOrEmpty(tz)
+        || string.IsNullOrEmpty(cf)
+        )
+        {
+            throw new Exception($"Missing config for {name}");
+        }
+
+        if (tz == "Local")
+        {
+            timeZone = TimeZoneInfo.Local;
+        }
+        else if (tz == "UTC")
+        {
+            timeZone = TimeZoneInfo.Utc;
+        }
+        else
+        {
+            throw new Exception($"Not found TimeZone {tz}");
+        }
+
+        if (!Enum.TryParse(cf, true, out cronFormat))
+        {
+            throw new Exception($"Not found CronFormat {cf}");
+        }
+
+
+
+        CronConfiguration<T> cronConfiguration = new CronConfiguration<T>();
+        cronConfiguration.CronExpression = expression;
+        cronConfiguration.TimeZoneInfo = timeZone;
+        cronConfiguration.CronFormat = cronFormat;
+        return cronConfiguration;
+    }
+
+    public static void Set(string expression, string timeZone, string cronformat, string configpath = "", string configname = "")
+    {
+
+    }
 }
 
 public static class Startup
@@ -141,6 +192,17 @@ public static class Startup
         action(cronConfiguration);
         services.AddSingleton((ICronConfiguration<T>)cronConfiguration);
         services.AddHostedService<T>();
+        return services;
+    }
+
+    public static IServiceCollection ApplyResulationByConfig<T>(this IServiceCollection services, string configpath = "", string configname = "") where T : CronJobService
+    {
+
+        var cronConfiguration = CronConfiguration<T>.Get(configpath, configname);
+        // action(cronConfiguration);
+        services.AddSingleton((ICronConfiguration<T>)cronConfiguration);
+        services.AddHostedService<T>();
+
         return services;
     }
 }

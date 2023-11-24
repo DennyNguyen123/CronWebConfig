@@ -2,15 +2,18 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+ConfigurationManager config = builder.Configuration;
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.ApplyResulation<MyCronJob1>(options =>
-{
-    options.TimeZoneInfo = TimeZoneInfo.Local;
-    options.CronExpression = @"*/7 * * * * *";
-    options.CronFormat = Cronos.CronFormat.IncludeSeconds;
-});
+// builder.Services.ApplyResulation<MyCronJob1>(options =>
+// {
+//     options.TimeZoneInfo = TimeZoneInfo.Local;
+//     options.CronExpression = @"*/7 * * * * *";
+//     options.CronFormat = Cronos.CronFormat.IncludeSeconds;
+// });
+
+builder.Services.ApplyResulationByConfig<MyCronJob1>("cron.config.json", "MyCronJob");
 
 // builder.Logging.ClearProviders();
 // builder.Logging.AddEventLog();
