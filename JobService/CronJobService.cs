@@ -2,7 +2,7 @@ using Cronos;
 
 public abstract class CronJobService : IHostedService, IDisposable
 {
-    private System.Timers.Timer timer;
+    private System.Timers.Timer? timer;
 
     private TimeZoneInfo timeZoneInfo;
 
@@ -10,7 +10,9 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     private CronExpression cronExpression;
 
-    public CancellationTokenSource _cancellationTokenSource;
+    public CancellationTokenSource? _cancellationTokenSource;
+
+    public bool State { get; set; }
 
     protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat = CronFormat.Standard)
     {
@@ -19,11 +21,16 @@ public abstract class CronJobService : IHostedService, IDisposable
         this.cronExpression = CronExpression.Parse(cronExpression, this.cronFormat);
     }
 
-    public virtual void Reconfig(string cronExpression, CronFormat cronFormat, TimeZoneInfo timeZoneInfo)
+    public virtual async Task Reconfig(string cronExpression, CronFormat cronFormat, TimeZoneInfo timeZoneInfo)
     {
         this.timeZoneInfo = timeZoneInfo;
         this.cronFormat = cronFormat;
         this.cronExpression = CronExpression.Parse(cronExpression, this.cronFormat);
+        timer?.Stop();
+        timer?.Dispose();
+        _cancellationTokenSource = new CancellationTokenSource();
+        await ScheduleJob(_cancellationTokenSource.Token);
+
     }
 
     public virtual async Task ScheduleJob(CancellationToken cancellationToken)
@@ -41,7 +48,6 @@ public abstract class CronJobService : IHostedService, IDisposable
             timer.Elapsed += async delegate
             {
                 timer.Dispose();
-                timer = null;
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await DoWork(cancellationToken).ConfigureAwait(continueOnCapturedContext: true);
@@ -76,17 +82,36 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     public virtual async Task StartAsync(CancellationToken cancellationToken)
     {
-        _cancellationTokenSource = new CancellationTokenSource();
-        await ScheduleJob(_cancellationTokenSource.Token).ConfigureAwait(continueOnCapturedContext: true);
+        if (_cancellationTokenSource == null)
+        {
+            _cancellationTokenSource = new CancellationTokenSource();
+        }
+
+        if (!this.State)
+        {
+            // await StartAsync(_cancellationTokenSource.Token);
+            await ScheduleJob(cancellationToken).ConfigureAwait(continueOnCapturedContext: true);
+            State = true;
+        }
     }
 
 
+    public virtual async Task StopAsync()
+    {
+        if (this.State)
+        {
+            var token = _cancellationTokenSource?.Token == null ? new CancellationToken() : _cancellationTokenSource.Token;
+            await StopAsync(token);
+        }
+    }
 
     public virtual async Task StopAsync(CancellationToken cancellationToken)
     {
         timer?.Stop();
         await Task.CompletedTask.ConfigureAwait(continueOnCapturedContext: true);
+        this.State = false;
     }
+
 }
 
 public interface ICronConfiguration<T>

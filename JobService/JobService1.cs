@@ -18,21 +18,30 @@ public class MyCronJob1 : CronJobService
         return base.StartAsync(cancellationToken);
     }
 
-    public override Task StopAsync(CancellationToken cancellationToken)
+    public override Task StopAsync()
     {
         _logger.LogInformation("Stop job");
-        return base.StopAsync(cancellationToken);
+        return base.StopAsync();
     }
 
-    public override void Reconfig(string cronExpression, CronFormat cronFormat, TimeZoneInfo timeZoneInfo)
+
+    public override async Task Reconfig(string cronExpression, CronFormat cronFormat, TimeZoneInfo timeZoneInfo)
     {
         _logger.LogInformation("Reconfig");
-        base.Reconfig(cronExpression, cronFormat, timeZoneInfo);
+        await base.Reconfig(cronExpression, cronFormat, timeZoneInfo);
     }
 
-    public override Task DoWork(CancellationToken cancellationToken)
+    public override async Task RunManual()
     {
-        _logger.LogInformation($"Work {DateTime.Now}");
-        return base.DoWork(cancellationToken);
+        _logger.LogInformation("Run manual");
+        await base.RunManual();
+    }
+    public override async Task DoWork(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation($"Work start {DateTime.Now}");
+        await Task.Delay(3000);
+        _logger.LogInformation($"Work end {DateTime.Now}");
+
+        await base.DoWork(cancellationToken);
     }
 }

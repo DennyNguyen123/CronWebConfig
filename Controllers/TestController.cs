@@ -11,15 +11,23 @@ public class TestController : Controller
     }
     public IActionResult Index()
     {
-        ViewBag.CronState = _service._cancellationTokenSource.IsCancellationRequested;
+        ViewBag.CronState = _service.State;
         return View();
     }
 
     [HttpGet]
-    public async Task<IActionResult> Stop()
+    public IActionResult Stop()
     {
-        _service._cancellationTokenSource.Cancel(true);
+        _service.StopAsync();
         // _service.StopAsync(new CancellationToken());
+        ViewBag.CronState = _service.State;
+        return View("Index");
+    }
+
+    public async Task<IActionResult> StopAll()
+    {
+        await _service.StopAsync();
+        ViewBag.CronState = _service.State;
         return View("Index");
     }
 
@@ -27,7 +35,7 @@ public class TestController : Controller
     public async Task<IActionResult> Start()
     {
         await _service.StartAsync(new CancellationToken());
-        ViewBag.CronState = _service._cancellationTokenSource.IsCancellationRequested;
+        ViewBag.CronState = _service.State;
         return View("Index");
     }
 
@@ -43,7 +51,7 @@ public class TestController : Controller
     public async Task<IActionResult> Reconfig([FromQuery] string format)
     {
         await _service.StopAsync(new CancellationToken());
-        _service.Reconfig(format, CronFormat.IncludeSeconds, TimeZoneInfo.Local);
+        await _service.Reconfig(format, CronFormat.IncludeSeconds, TimeZoneInfo.Local);
         await _service.StartAsync(new CancellationToken());
         return View("Index");
     }
@@ -51,7 +59,7 @@ public class TestController : Controller
     public IActionResult Check()
     {
 
-        var rs = _service._cancellationTokenSource.IsCancellationRequested;
+        var rs = _service._cancellationTokenSource?.IsCancellationRequested;
         return View("Index");
     }
 

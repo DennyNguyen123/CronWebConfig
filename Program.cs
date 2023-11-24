@@ -12,13 +12,15 @@ builder.Services.ApplyResulation<MyCronJob1>(options =>
     options.CronFormat = Cronos.CronFormat.IncludeSeconds;
 });
 
-builder.Logging.ClearProviders();
+// builder.Logging.ClearProviders();
 // builder.Logging.AddEventLog();
 
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
