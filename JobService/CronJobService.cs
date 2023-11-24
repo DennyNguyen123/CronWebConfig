@@ -23,6 +23,8 @@ public abstract class CronJobService : IHostedService, IDisposable
     public bool State { get; set; }
     public string StateString { get => State ? "Running" : "Stopped"; }
 
+    public DateTimeOffset? next;
+
     protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat, string? jobDescription, bool isFromConfig, string? configpath)
     {
         this.ConfigPath = configpath;
@@ -81,7 +83,7 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     public virtual async Task ScheduleJob(CancellationToken cancellationToken)
     {
-        DateTimeOffset? next = cronExpression.GetNextOccurrence(DateTimeOffset.Now, timeZoneInfo);
+        next = cronExpression.GetNextOccurrence(DateTimeOffset.Now, timeZoneInfo);
         if (next.HasValue)
         {
             TimeSpan delay = next.Value - DateTimeOffset.Now;

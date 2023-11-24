@@ -36,6 +36,8 @@ public class MyCronJob1 : CronJobService
         _logger.LogInformation("Run manual job 1");
         await base.RunManual();
     }
+
+
     public override async Task DoWork(CancellationToken cancellationToken)
     {
         _logger.LogInformation($"Job 1 start");

@@ -21,6 +21,7 @@ public class JobServiceController : Controller
         // ViewBag.CronState = _service.State;
         // return View(_lstservice);
         // _logger.LogInformation(_lstservice.Count().ToString());
+        // Response.Headers.Add("Refresh", "1");
         return View(_lstservice);
     }
 
