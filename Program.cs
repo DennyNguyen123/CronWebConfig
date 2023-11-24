@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging.EventLog;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +8,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.ApplyResulation<MyCronJob1>(options =>
 {
     options.TimeZoneInfo = TimeZoneInfo.Local;
-    options.CronExpression = @"*/3 * * * * *";
+    options.CronExpression = @"*/7 * * * * *";
     options.CronFormat = Cronos.CronFormat.IncludeSeconds;
 });
 

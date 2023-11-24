@@ -10,6 +10,8 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     private CronExpression cronExpression;
 
+    public CancellationTokenSource _cancellationTokenSource;
+
     protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat = CronFormat.Standard)
     {
         this.timeZoneInfo = timeZoneInfo;
@@ -56,6 +58,12 @@ public abstract class CronJobService : IHostedService, IDisposable
         await Task.CompletedTask.ConfigureAwait(continueOnCapturedContext: true);
     }
 
+    public virtual async Task RunManual()
+    {
+        CancellationTokenSource cancelsource = new CancellationTokenSource();
+        await DoWork(cancelsource.Token).ConfigureAwait(continueOnCapturedContext: true);
+        cancelsource.Cancel(true);
+    }
     public virtual async Task DoWork(CancellationToken cancellationToken)
     {
         await Task.Delay(50, cancellationToken).ConfigureAwait(continueOnCapturedContext: true);
@@ -68,8 +76,11 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     public virtual async Task StartAsync(CancellationToken cancellationToken)
     {
-        await ScheduleJob(cancellationToken).ConfigureAwait(continueOnCapturedContext: true);
+        _cancellationTokenSource = new CancellationTokenSource();
+        await ScheduleJob(_cancellationTokenSource.Token).ConfigureAwait(continueOnCapturedContext: true);
     }
+
+
 
     public virtual async Task StopAsync(CancellationToken cancellationToken)
     {
@@ -89,9 +100,9 @@ public interface ICronConfiguration<T>
 
 public class CronConfiguration<T> : ICronConfiguration<T>
 {
-    public string CronExpression { get; set; }
+    public string CronExpression { get; set; } = "* * * * *";
 
-    public TimeZoneInfo TimeZoneInfo { get; set; }
+    public TimeZoneInfo TimeZoneInfo { get; set; } = TimeZoneInfo.Local;
 
     public CronFormat CronFormat { get; set; } = CronFormat.Standard;
 

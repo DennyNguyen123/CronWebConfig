@@ -11,28 +11,31 @@ public class TestController : Controller
     }
     public IActionResult Index()
     {
+        ViewBag.CronState = _service._cancellationTokenSource.IsCancellationRequested;
         return View();
     }
 
     [HttpGet]
-    public IActionResult Stop()
+    public async Task<IActionResult> Stop()
     {
-        _service.StopAsync(new CancellationToken());
-        return Ok();
+        _service._cancellationTokenSource.Cancel(true);
+        // _service.StopAsync(new CancellationToken());
+        return View("Index");
     }
 
     [HttpGet]
-    public IActionResult Start()
+    public async Task<IActionResult> Start()
     {
-        _service.StartAsync(new CancellationToken());
-        return Ok();
+        await _service.StartAsync(new CancellationToken());
+        ViewBag.CronState = _service._cancellationTokenSource.IsCancellationRequested;
+        return View("Index");
     }
 
     [HttpGet]
-    public IActionResult Run()
+    public async Task<IActionResult> Run()
     {
-        _service.DoWork(new CancellationToken());
-        return Ok();
+        await _service.RunManual();
+        return View("Index");
     }
 
 
@@ -42,7 +45,14 @@ public class TestController : Controller
         await _service.StopAsync(new CancellationToken());
         _service.Reconfig(format, CronFormat.IncludeSeconds, TimeZoneInfo.Local);
         await _service.StartAsync(new CancellationToken());
-        return Ok();
+        return View("Index");
+    }
+
+    public IActionResult Check()
+    {
+
+        var rs = _service._cancellationTokenSource.IsCancellationRequested;
+        return View("Index");
     }
 
 
