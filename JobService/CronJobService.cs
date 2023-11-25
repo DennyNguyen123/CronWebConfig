@@ -42,16 +42,17 @@ public abstract class CronJobService : IHostedService, IDisposable
     }
 
 
-    private void WriteConfig(string expression, string timeZone, string cronformat, string? jobdesc)
+    private void WriteConfig(string expression, string timeZone, string cronformat, string? jobdesc, bool isStartOnStartup)
     {
         var config = new AppConfig(this.ConfigPath ?? "");
         config.JsonObj["CronJobs"][JobName]["CronExpression"] = expression;
         config.JsonObj["CronJobs"][JobName]["TimeZoneInfo"] = timeZone;
         config.JsonObj["CronJobs"][JobName]["CronFormat"] = cronformat;
         config.JsonObj["CronJobs"][JobName]["JobDesc"] = jobdesc;
+        config.JsonObj["CronJobs"][JobName]["IsRunOnStartup"] = isStartOnStartup;
         config.SaveToFile();
     }
-    public virtual async Task Reconfig(string cronExpression, string cronformatstr, string timeZoneInfo, string? jobDescription)
+    public virtual async Task Reconfig(string cronExpression, string cronformatstr, string timeZoneInfo, string? jobDescription, bool isStartOnStartup)
     {
         if (this.IsFromConfig)
         {
@@ -65,16 +66,17 @@ public abstract class CronJobService : IHostedService, IDisposable
             this.cronFormat = cronFormat;
             this.cronExpression = CronExpression.Parse(cronExpression, this.cronFormat);
             this.cronExpressionstring = cronExpression;
+            this.IsRunOnStartup = isStartOnStartup;
             if (State)
             {
                 await StopAsync();
             }
 
-            this.WriteConfig(cronExpression, timeZoneInfo, cronformatstr, jobDescription);
+            this.WriteConfig(cronExpression, timeZoneInfo, cronformatstr, jobDescription, isStartOnStartup);
 
             _cancellationTokenSource = new CancellationTokenSource();
 
-            if (!State)
+            if (!State & IsRunOnStartup)
             {
                 await StartAsync(_cancellationTokenSource.Token);
             }

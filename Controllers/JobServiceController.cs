@@ -67,8 +67,9 @@ public class JobServiceController : Controller
     public async Task<IActionResult> Reconfig(ReconfigModel reconfig)
     {
 
-        var service = _lstservice.FirstOrDefault(o => o.JobName == reconfig.ServiceName);
-        await service.Reconfig(reconfig.Expression, reconfig.CronFormat.ToString(), reconfig.TimeZone, reconfig.JobDesc);
+        var service = _lstservice.Single(o => o.JobName == reconfig.ServiceName);
+        Console.WriteLine(1);
+        await service.Reconfig(reconfig.Expression, reconfig.CronFormat.ToString(), reconfig.TimeZone, reconfig.JobDesc, reconfig.IsRunOnStartup);
 
 
         return RedirectToAction("Index", _lstservice);

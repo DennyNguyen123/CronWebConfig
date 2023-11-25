@@ -17,14 +17,16 @@ builder.Services.AddControllersWithViews();
 
 
 builder.Services.ApplyResulationByConfig<MyCronJob1>("cron.config.json");
-builder.Services.ApplyResulationByConfig<MyCronJob2>("cron.config.json");
+// builder.Services.ApplyResulationByConfig<MyCronJob2>("cron.config.json");
 
-// builder.Services.ApplyResulation<MyCronJob2>(options =>
-// {
-//     options.CronExpression = "* * * * * *";
-//     options.CronFormat = Cronos.CronFormat.Standard;
-//     options.TimeZoneInfo = TimeZoneInfo.Local;
-// });
+builder.Services.ApplyResulation<MyCronJob2>(options =>
+{
+    options.CronExpression = "* * * * *";
+    options.CronFormat = Cronos.CronFormat.Standard;
+    options.TimeZoneInfo = TimeZoneInfo.Local;
+    options.JobDesc = "Job 2 not config";
+    // options.IsRunOnStartup = false;
+});
 // builder.Logging.ClearProviders();
 // builder.Logging.AddEventLog();
 

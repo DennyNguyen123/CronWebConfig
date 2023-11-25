@@ -27,10 +27,10 @@ public class MyCronJob2 : CronJobService
     }
 
 
-    public override Task Reconfig(string cronExpression, string cronFormat, string timeZoneInfo, string? jobDescription)
+    public override Task Reconfig(string cronExpression, string cronformatstr, string timeZoneInfo, string? jobDescription, bool isStartOnStartup)
     {
         _logger.LogInformation("Reconfig job 2");
-        return base.Reconfig(cronExpression, cronFormat, timeZoneInfo, jobDescription);
+        return base.Reconfig(cronExpression, cronformatstr, timeZoneInfo, jobDescription, isStartOnStartup);
     }
 
     public override async Task RunManual()
