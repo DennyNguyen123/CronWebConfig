@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Cronos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 public class JobServiceController : Controller
 {
@@ -59,6 +60,7 @@ public class JobServiceController : Controller
         reconfig.Expression = service.cronExpressionstring;
         reconfig.JobDesc = service.JobDescription;
         reconfig.CronFormat = service.cronFormat;
+        reconfig.IsRunOnStartup = service.IsRunOnStartup;
         return PartialView("_ReconfigPartial", reconfig);
     }
 
@@ -84,4 +86,5 @@ public class ReconfigModel
     public CronFormat CronFormat { get; set; }
     public string TimeZone { get; set; }
     public string? JobDesc { get; set; }
+    public bool IsRunOnStartup { get; set; }
 }

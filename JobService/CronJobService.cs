@@ -25,7 +25,9 @@ public abstract class CronJobService : IHostedService, IDisposable
     public string StateString { get => State ? "Running" : "Stopped"; }
 
     public DateTimeOffset? next;
-    protected bool IsRunOnStartup { get; set; }
+    public bool IsRunOnStartup { get; set; }
+
+    private bool IsFirstStart { get; set; } = true;
 
     protected CronJobService(string cronExpression, TimeZoneInfo timeZoneInfo, CronFormat cronFormat, string? jobDescription, bool isFromConfig, string? configpath, bool isStartOnStartup)
     {
@@ -46,7 +48,7 @@ public abstract class CronJobService : IHostedService, IDisposable
         config.JsonObj["CronJobs"][JobName]["CronExpression"] = expression;
         config.JsonObj["CronJobs"][JobName]["TimeZoneInfo"] = timeZone;
         config.JsonObj["CronJobs"][JobName]["CronFormat"] = cronformat;
-        config.JsonObj["CronJobs"][JobName]["CronFormat"] = jobdesc;
+        config.JsonObj["CronJobs"][JobName]["JobDesc"] = jobdesc;
         config.SaveToFile();
     }
     public virtual async Task Reconfig(string cronExpression, string cronformatstr, string timeZoneInfo, string? jobDescription)
@@ -132,10 +134,13 @@ public abstract class CronJobService : IHostedService, IDisposable
 
     public virtual async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!IsRunOnStartup)
+        if (IsFirstStart)
         {
-            IsRunOnStartup = true;
-            return;
+            IsFirstStart = false;
+            if (!IsRunOnStartup)
+            {
+                return;
+            }
         }
 
         if (_cancellationTokenSource == null)

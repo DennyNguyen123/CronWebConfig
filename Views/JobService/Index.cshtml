@@ -1,7 +1,7 @@
 @model List<CronJobService>
 
 @{
-
+  string modeltitle = "Reconfig Cron";
 }
 
 <h1>Job Services</h1>
@@ -80,4 +80,4 @@
   </tbody>
 </table>
 
-<partial name="_ModalPartial" />
+<partial name="_ModalPartial" model="modeltitle"/>

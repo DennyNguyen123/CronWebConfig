@@ -1,16 +1,19 @@
+@model string
+
 <!-- Modal Popup -->
 <div id="MyPopup" class="modal fade" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title"></h4>
+                <h4 class="modal-title">@Model</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="dvPartial"></div>
             </div>
-            <div class="modal-footer">
-                <input type="button" id="btnClosePopup" value="Close" data-bs-dismiss="modal" class="btn btn-danger" />
-            </div>
+            @* <div class="modal-footer">
+            <input type="button" id="btnClosePopup" value="Close" data-bs-dismiss="modal" class="btn btn-danger" />
+            </div> *@
         </div>
     </div>
 </div>
