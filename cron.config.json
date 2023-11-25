@@ -4,13 +4,15 @@
       "CronExpression": "*/10 * * * * *",
       "TimeZoneInfo": "UTC",
       "CronFormat": "IncludeSeconds",
-      "JobDesc": "Job 1"
+      "JobDesc": "Job 1",
+      "IsRunOnStartup": true
     },
     "MyCronJob2": {
       "CronExpression": "* * * * *",
       "TimeZoneInfo": "Local",
       "CronFormat": "Standard",
-      "JobDesc": "Job 2"
+      "JobDesc": "Job 2",
+      "IsRunOnStartup": false
     }
   }
 }

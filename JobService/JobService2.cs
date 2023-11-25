@@ -5,7 +5,7 @@ public class MyCronJob2 : CronJobService
     private readonly ILogger<MyCronJob2> _logger;
 
     public MyCronJob2(ICronConfiguration<MyCronJob2> config, ILogger<MyCronJob2> logger)
-        : base(config.CronExpression, config.TimeZoneInfo, config.CronFormat, config.JobDesc, config.IsFromConfig, config.ConfigPath)
+        : base(config.CronExpression, config.TimeZoneInfo, config.CronFormat, config.JobDesc, config.IsFromConfig, config.ConfigPath, config.IsRunOnStartup)
     {
         _logger = logger;
 
@@ -13,7 +13,10 @@ public class MyCronJob2 : CronJobService
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Start job 2");
+        if (!IsRunOnStartup)
+        {
+            _logger.LogInformation("Start job 1");
+        }
         return base.StartAsync(cancellationToken);
     }
 
@@ -37,7 +40,7 @@ public class MyCronJob2 : CronJobService
     }
     public override async Task DoWork(CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"Job 2 start");
+        _logger.LogInformation($"Job 2 run");
         // await Task.Delay(3000);
         // _logger.LogInformation($"Work end {DateTime.Now}");
 
